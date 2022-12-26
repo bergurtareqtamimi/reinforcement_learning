@@ -1,5 +1,6 @@
 # game environment influenced by Shaun Halverson
 import random
+from mcts import monte_carlo_tree_search
 
 print("Welcome to Connect Four")
 print("-----------------------")
@@ -84,8 +85,13 @@ def do_move(move: int, piece: str) -> None:
             gameBoard[current_row][move] = piece
             return
 
+
+
+##########################################################
+
 leaveLoop = False
-turnCounter = 0
+player_color = input("blue (b) or read(r)?: ")
+turnCounter = 0 if  player_color == "b" else 1
 while(leaveLoop == False):
   if(turnCounter % 2 == 0):
     printGameBoard()
@@ -96,94 +102,30 @@ while(leaveLoop == False):
       try:
         ### Check if the space is available
         if(isSpaceAvailable(coordinate)):
-          do_move(coordinate, '🔵')
+          do_move(coordinate, '🔵' if player_color == "b" else '🔴')
           break
         else:
           print("Not a valid coordinate")
       except:
         print("Error occured. Please try again.")
-    winner = checkForWinner('🔵')
+    winner = checkForWinner('🔵' if player_color == "b" else '🔴')
     turnCounter += 1
   ### It's the computers turn
   else:
     while True:
-      cpuChoice = possibleLetters[random.randint(0,6)]
-      cpuCoordinate = coordinateParser(cpuChoice)
+      mcts = monte_carlo_tree_search(gameBoard, '🔴' if player_color == "b" else '🔵')
+      mcts.run(2000)
+      cpuCoordinate = mcts.pick_move()
       if(isSpaceAvailable(cpuCoordinate)):
-        do_move(cpuCoordinate, '🔴')
+        do_move(cpuCoordinate, '🔴' if player_color == "b" else '🔵')
         break
     turnCounter += 1
-    winner = checkForWinner('🔴')
+    winner = checkForWinner('🔴' if player_color == "b" else '🔵')
 
   if(winner):
     printGameBoard()
     break
 
-
-class Board:
-    def __init__(self) -> None:
-      self.board = [["","","","","","",""], ["","","","","","",""], ["","","","","","",""], ["","","","","","",""], ["","","","","","",""], ["","","","","","",""]]
-
-    def do_move(self, move: int, piece: str) -> None:
-        for current_row in range(rows - 1, -1, -1):
-            if self.board[current_row][move] == "":
-                self.board[current_row][move] = piece
-                return
-
-    def print_board(self) -> None:
-        print("\n     A    B    C    D    E    F    G  ", end="")
-        for x in range(rows):
-            print("\n   +----+----+----+----+----+----+----+")
-            print(x, " |", end="")
-            for y in range(cols):
-                if(self.board[x][y] == "🔵"):
-                    print("",self.board[x][y], end=" |")
-                elif(self.board[x][y] == "🔴"):
-                    print("", self.board[x][y], end=" |")
-                else:
-                    print(" ", self.board[x][y], end="  |")
-        print("\n   +----+----+----+----+----+----+----+")
-
-
-    def checkForWinner(self, chip:str):
-        ### Check horizontal spaces
-        for y in range(rows):
-            for x in range(cols - 3):
-                if self.board[x][y] == chip and self.board[x+1][y] == chip and self.board[x+2][y] == chip and self.board[x+3][y] == chip:
-                    print("\nGame over", chip, "wins! Thank you for playing :)")
-                    return True
-
-        ### Check vertical spaces
-        for x in range(rows):
-            for y in range(cols - 3):
-                if self.board[x][y] == chip and self.board[x][y+1] == chip and self.board[x][y+2] == chip and self.board[x][y+3] == chip:
-                    print("\nGame over", chip, "wins! Thank you for playing :)")
-                    return True
-
-        ### Check upper right to bottom left diagonal spaces
-        for x in range(rows - 3):
-            for y in range(3, cols):
-                if self.board[x][y] == chip and self.board[x+1][y-1] == chip and self.board[x+2][y-2] == chip and self.board[x+3][y-3] == chip:
-                    print("\nGame over", chip, "wins! Thank you for playing :)")
-                    return True
-
-        ### Check upper left to bottom right diagonal spaces
-        for x in range(rows - 3):
-            for y in range(cols - 3):
-                if self.board[x][y] == chip and self.board[x+1][y+1] == chip and self.board[x+2][y+2] == chip and self.board[x+3][y+3] == chip:
-                    print("\nGame over", chip, "wins! Thank you for playing :)")
-                    return True
-        return False
-
-    def isSpaceAvailable(self, column: int):
-        if self.board[0][column] == "": return True
-        return False
-
-    def get_legal_moves(self) -> list[int]:
-        moves: list[int] = []
-        for column in range(7):
-            if self.isSpaceAvailable(column):
-                moves.append(column)
 
 
 
